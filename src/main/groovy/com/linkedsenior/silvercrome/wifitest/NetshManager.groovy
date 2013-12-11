@@ -73,10 +73,16 @@ class NetshManager {
         }
     }
 
-    static def mkProfile(Network network, String password = "") {
+    static def mkProfile(String ssid, String password = "") {
+        def network = listNetworks().find {it.SSID == ssid}
         def xml = ProfileManager.buildProfile(network, password)
-        def File file // TODO: Save file
-//        /netsh wlan add profile filename="$file.absolutePath"/.execute()
+        File.createTempFile("profile", ".xml") with {
+            deleteOnExit()
+            write xml
+            /netsh wlan add profile filename="$absolutePath"/.execute().waitForOrKill(2000)
+            delete()
+        }
+        ssid
     }
 
     private static def profileInfo(String profile) {
